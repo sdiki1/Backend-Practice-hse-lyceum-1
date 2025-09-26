@@ -1,0 +1,92 @@
+services:
+  api: &main_app
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: backend:${BACKEND_VERSION:-latest}
+    restart: always
+    env_file:
+      - .env
+    labels:
+      # Enables traefik for this container.
+      - traefik.enable=true
+      - traefik.http.routers.backend.rule=Host(`${BACKEND_TRAEFIK_HOST:-backend.localhost}`)
+      - traefik.http.routers.backend.entrypoints=http
+      - traefik.http.routers.backend.service=backend
+      - traefik.http.services.backend.loadbalancer.server.port=${BACKEND_PORT:-8000}
+    networks:
+      - default
+      - traefik-shared
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      BACKEND_HOST: 0.0.0.0
+      BACKEND_DB_HOST: backend-db
+      BACKEND_DB_PORT: 5432
+      BACKEND_DB_USER: backend
+      BACKEND_DB_PASS: backend
+      BACKEND_DB_BASE: backend
+      BACKEND_REDIS_HOST: backend-redis
+
+  taskiq-worker:
+    <<: *main_app
+    labels: []
+    command:
+      - taskiq
+      - worker
+      - backend.tkq:broker
+
+  db:
+    image: postgres:16.3-bullseye
+    hostname: backend-db
+    environment:
+      POSTGRES_PASSWORD: "backend"
+      POSTGRES_USER: "backend"
+      POSTGRES_DB: "backend"
+    volumes:
+      - backend-db-data:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: pg_isready -U backend
+      interval: 2s
+      timeout: 3s
+      retries: 40
+
+  migrator:
+    image: backend:${BACKEND_VERSION:-latest}
+    restart: "no"
+    command: alembic upgrade head
+    environment:
+      BACKEND_DB_HOST: backend-db
+      BACKEND_DB_PORT: 5432
+      BACKEND_DB_USER: backend
+      BACKEND_DB_PASS: backend
+      BACKEND_DB_BASE: backend
+    depends_on:
+      db:
+        condition: service_healthy
+
+  redis:
+    image: bitnami/redis:6.2.5
+    hostname: "backend-redis"
+    restart: always
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+    healthcheck:
+      test: redis-cli ping
+      interval: 1s
+      timeout: 3s
+      retries: 50
+
+
+
+volumes:
+  backend-db-data:
+    name: backend-db-data
+
+networks:
+  traefik-shared:
+    name: traefik-shared
