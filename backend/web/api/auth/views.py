@@ -1,6 +1,5 @@
 # type: ignore
-from fastapi import APIRouter, Depends, HTTPException, status
-from h11 import Response
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.dependencies import get_db_session
