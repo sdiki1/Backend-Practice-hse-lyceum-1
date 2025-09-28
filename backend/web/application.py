@@ -1,3 +1,4 @@
+# type: ignore
 import logging
 from importlib import metadata
 from pathlib import Path

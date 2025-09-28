@@ -5,7 +5,7 @@ from fastapi.param_functions import Depends
 
 from backend.db.dao.dummy_dao import DummyDAO
 from backend.db.models.dummy_model import DummyModel
-from backend.web.api.dummy.schema import DummyModelDTO, DummyModelInputDTO
+from backend.schemas.dummy import DummyModelDTO, DummyModelInputDTO
 
 router = APIRouter()
 
