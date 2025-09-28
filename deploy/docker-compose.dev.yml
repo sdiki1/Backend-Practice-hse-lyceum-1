@@ -11,7 +11,10 @@ services:
     environment:
       # Enables autoreload.
       BACKEND_RELOAD: "True"
-
+  db:
+    ports:
+    - "5432:5432"
+    
   taskiq-worker:
     volumes:
       # Adds current directory as volume.

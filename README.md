@@ -170,3 +170,72 @@ docker run -p "5432:5432" -e "POSTGRES_PASSWORD=backend" -e "POSTGRES_USER=backe
 ```bash
 pytest -vv .
 ```
+
+
+## Architecture Overview
+
+## User Model
+
+### Core Authentication Fields
+
+| Field | Type | Description | Constraints |
+|-------|------|-------------|-------------|
+| `id` | `UUID` | Unique user identifier | Primary Key, Auto-generated |
+| `email` | `String` | User's email address | Unique, Required, Indexed |
+| `hashed_password` | `String` | Securely hashed password | Required, Length: 1024 |
+| `is_active` | `Boolean` | Account activation status | Default: `True` |
+| `is_superuser` | `Boolean` | Administrator privileges | Default: `False` |
+| `is_verified` | `Boolean` | Email verification status | Default: `False` |
+
+### Profile Information
+
+| Field | Type | Description | Default |
+|-------|------|-------------|---------|
+| `first_name` | `String(100)` | User's first name | Optional |
+| `last_name` | `String(100)` | User's last name | Optional |
+| `phone_number` | `String(20)` | Contact phone number | Optional, Indexed |
+| `timezone` | `String(50)` | User's preferred timezone | `"UTC"` |
+| `preferred_language` | `String(10)` | UI language preference | `"ru"` |
+| `secret_word` | `String(100)` | Security phrase for account recovery | Optional |
+
+### Activity Tracking & Statistics
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `created_at` | `DateTime` | Account creation timestamp (UTC) |
+| `updated_at` | `DateTime` | Last profile update timestamp (UTC) |
+| `last_login_at` | `DateTime` | Most recent login timestamp (UTC) |
+| `last_activity_at` | `DateTime` | Last user activity timestamp (UTC) |
+| `last_password_change` | `DateTime` | Password last changed timestamp (UTC) |
+| `email_verified_at` | `DateTime` | Email verification timestamp (UTC) |
+
+### Privacy & Security
+
+| Field | Type | Description | Values |
+|-------|------|-------------|---------|
+| `privacy_level` | `Enum` | Profile visibility setting | `public`, `private`, `friends_only` |
+| `is_private` | `Boolean` | Quick privacy toggle | `False` |
+| `status` | `Enum` | Account status | `active`, `inactive`, `suspended`, `banned` |
+| `email_notifications` | `Boolean` | Email notifications preference | `True` |
+
+### Technical Metadata
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `registration_ip` | `String(45)` | IP address during registration|
+| `last_login_ip` | `String(45)` | IP address of last login |
+
+
+
+
+## API Endpoints
+
+### Authentication Endpoints
+
+| Method | Endpoint | Description | Request Body |
+|--------|----------|-------------|--------------|
+| `POST` | `/api/auth/register` | Create new user account | `UserCreate` |
+| `POST` | `/api/auth/jwt/login` | User login | `LoginRequest` |
+| `POST` | `/api/auth/jwt/logout` | User logout | - |
+| `POST` | `/api/auth/forgot-password` | Request password reset | `EmailStr` |
+| `POST` | `/auth/reset-password` | Reset password | `PasswordReset` |
