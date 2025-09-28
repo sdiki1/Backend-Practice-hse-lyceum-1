@@ -6,7 +6,7 @@ from typing import Optional
 from fastapi_users import schemas
 from pydantic import EmailStr
 
-from backend.db.models.users import UserPrivacy, UserStatus  # type: ignore
+from backend.db.models.users import UserPrivacy, UserStatus
 
 
 class UserBase(schemas.BaseUser[uuid.UUID]):
@@ -19,19 +19,6 @@ class UserBase(schemas.BaseUser[uuid.UUID]):
     last_name: Optional[str] = None
     privacy_level: UserPrivacy = UserPrivacy.PUBLIC
     preferred_language: str = "ru"
-
-
-class UserCreate(schemas.BaseUserCreate):
-    """Create user schema."""
-
-    secret_word: Optional[str] = None
-    phone_number: Optional[str] = None
-    timezone: str = "UTC"
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    privacy_level: UserPrivacy = UserPrivacy.PUBLIC
-    preferred_language: str = "ru"
-    status: Optional[UserStatus] = UserStatus.ACTIVE
 
 
 class UserUpdate(UserBase):

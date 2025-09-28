@@ -5,6 +5,7 @@ from enum import Enum as PyEnum
 from typing import Optional
 
 from fastapi import Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin
 from fastapi_users.authentication import (
     AuthenticationBackend,
@@ -102,6 +103,29 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     reset_password_token_secret = settings.users_secret
     verification_token_secret = settings.users_secret
 
+    async def authenticate(
+        self,
+        credentials: OAuth2PasswordRequestForm,
+    ) -> Optional[User]:
+        """Authenticate user using email instead of username."""
+
+        user = await self.get_by_email(credentials.username)
+        if user is None:
+            self.password_helper.hash(credentials.password)
+            return None
+
+        verified, updated_password_hash = self.password_helper.verify_and_update(
+            credentials.password,
+            user.hashed_password,
+        )
+        if not verified:
+            return None
+
+        if updated_password_hash is not None:
+            await self.user_db.update(user, {"hashed_password": updated_password_hash})
+
+        return user
+
 
 async def get_user_db(
     session: AsyncSession = Depends(get_db_session),
@@ -136,7 +160,7 @@ def get_jwt_strategy() -> JWTStrategy:
     return JWTStrategy(secret=settings.users_secret, lifetime_seconds=None)
 
 
-bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
+bearer_transport = BearerTransport(tokenUrl="auth/login")
 auth_jwt = AuthenticationBackend(
     name="jwt",
     transport=bearer_transport,

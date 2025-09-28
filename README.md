@@ -235,7 +235,5 @@ pytest -vv .
 | Method | Endpoint | Description | Request Body |
 |--------|----------|-------------|--------------|
 | `POST` | `/api/auth/register` | Create new user account | `UserCreate` |
-| `POST` | `/api/auth/jwt/login` | User login | `LoginRequest` |
-| `POST` | `/api/auth/jwt/logout` | User logout | - |
-| `POST` | `/api/auth/forgot-password` | Request password reset | `EmailStr` |
-| `POST` | `/auth/reset-password` | Reset password | `PasswordReset` |
+| `POST` | `/api/auth/login` | User login | `LoginRequest` |
+| `POST` | `/api/auth/change-password` | Request password reset | `EmailStr` |
