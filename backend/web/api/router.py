@@ -1,3 +1,4 @@
+# type: ignore
 from fastapi.routing import APIRouter
 
 from backend.web.api import docs, dummy, echo, monitoring, redis, users

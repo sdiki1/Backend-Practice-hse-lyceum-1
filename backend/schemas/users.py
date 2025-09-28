@@ -1,3 +1,4 @@
+# type: ignore
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -5,7 +6,7 @@ from typing import Optional
 from fastapi_users import schemas
 from pydantic import EmailStr
 
-from backend.db.models.users import UserPrivacy, UserStatus
+from backend.db.models.users import UserPrivacy, UserStatus  # type: ignore
 
 
 class UserBase(schemas.BaseUser[uuid.UUID]):

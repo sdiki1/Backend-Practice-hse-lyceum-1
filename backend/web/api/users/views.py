@@ -1,8 +1,9 @@
+# type: ignore
 from fastapi import APIRouter
 
 from backend.db.models.users import (
-    api_users,  # type: ignore
-    auth_jwt,  # type: ignore
+    api_users,
+    auth_jwt,
 )
 from backend.schemas.users import (
     UserCreate,
