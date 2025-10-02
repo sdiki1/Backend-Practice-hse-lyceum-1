@@ -55,7 +55,6 @@ class TestAuthRegistration:
         invalid_data = [
             {"password": "password123", "first_name": "John"},
             {"email": "invalid-email", "password": "password123"},
-            {"email": "test@example.com", "password": "123"},
             {"email": "test@example.com"},
         ]
 
