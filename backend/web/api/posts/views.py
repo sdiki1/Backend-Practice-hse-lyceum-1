@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 @router.post("/create", status_code=status.HTTP_201_CREATED)
-async def create_dummy_model(
+async def create_post_model(
     new_post_object: PostModelInputDTO,
     user: User = Depends(current_active_user),
     post_dao: PostDAO = Depends(),
