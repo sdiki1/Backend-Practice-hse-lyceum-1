@@ -92,9 +92,9 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     )
 
     """Fields about user's IPs, bcs I wanna get Shadi home's ip :)"""
-    registration_ip: Mapped[Optional[str]] = mapped_column(String(14), nullable=True)
-    last_login_ip: Mapped[Optional[str]] = mapped_column(String(14), nullable=True)
-    last_using_ip: Mapped[Optional[str]] = mapped_column(String(14), nullable=True)
+    registration_ip: Mapped[Optional[str]] = mapped_column(String(15), nullable=True)
+    last_login_ip: Mapped[Optional[str]] = mapped_column(String(15), nullable=True)
+    last_using_ip: Mapped[Optional[str]] = mapped_column(String(15), nullable=True)
 
 
 class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):

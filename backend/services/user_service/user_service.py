@@ -3,11 +3,12 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.dao.users_dao import UserDAO
-from backend.db.models.users import User, UserManager
+from backend.db.dependencies import get_db_session
+from backend.db.models.users import User, UserManager, get_user_manager
 
 
 class UserService:
@@ -76,8 +77,15 @@ class UserService:
         current_password: str,
         new_password: str,
         secret_word: Optional[str] = None,
-    ) -> bool:
-        """Change user password foo."""
+    ) -> None:
+        """Change user password function.
+
+        :param user_id: User ID.
+        :param current_password: Current not cashed password.
+        :param new_password: New not cashed password.
+        :param secret_word: Secret word if it exists.
+        :return: None or raise http exception, if sth went wrong.
+        """
 
         user = await self.user_dao.get_user_by_id(user_id)
         if not user:
@@ -110,8 +118,6 @@ class UserService:
                 detail="Failed to update password",
             )
 
-        return True
-
     async def get_user_profile(self, user_id: UUID) -> Optional[User]:
         """Get user profile by their id."""
         return await self.user_dao.get_user_by_id(user_id)
@@ -140,10 +146,22 @@ class UserService:
 
         return await self.user_dao.update_last_activity(user_id)
 
+    async def get_client_ip(self, request: Request) -> str:
+        """Get client IP address."""
+
+        if "x-forwarded-for" in request.headers:
+            ip = request.headers["x-forwarded-for"].split(",")[0].strip()
+        elif "x-real-ip" in request.headers:
+            ip = request.headers["x-real-ip"]
+        else:
+            ip = request.client.host
+
+        return ip
+
     async def update_user_last_login(
         self,
         user_id: UUID,
-        ip_address: Optional[str] = None,
+        request: Optional[Request] = None,
     ) -> bool:
         """Update user's last login timestamp and IP."""
 
@@ -151,8 +169,34 @@ class UserService:
             "last_login_at": datetime.now(timezone.utc),
             "last_activity_at": datetime.now(timezone.utc),
         }
+        ip_address = await self.get_client_ip(request)
 
-        if ip_address:
-            update_data["last_login_ip"] = ip_address
+        update_data["last_login_ip"] = ip_address
+        update_data["last_using_ip"] = ip_address
 
         return await self.user_dao.update_user_profile(user_id, update_data)
+
+    async def update_user_registration(
+        self,
+        user_id: UUID,
+        request: Optional[Request] = None,
+    ) -> bool:
+        """Update user's registration timestamp and IP."""
+
+        update_data = {
+            "last_activity_at": datetime.now(timezone.utc),
+        }
+        if request:
+            ip_address = await self.get_client_ip(request)
+            update_data["last_using_ip"] = ip_address
+            update_data["registration_ip"] = ip_address
+
+        return await self.user_dao.update_user_profile(user_id, update_data)
+
+
+def get_user_service(
+    session: AsyncSession = Depends(get_db_session),
+    user_manager: UserManager = Depends(get_user_manager),
+) -> UserService:
+    """Dependency for UserService, return UserService instance."""
+    return UserService(session, user_manager)

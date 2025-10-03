@@ -57,7 +57,16 @@ class UserDAO:
                 return False
 
             # Ensure we don't update sensitive fields directly
-            restricted_fields = {"hashed_password", "id", "is_superuser"}
+            restricted_fields = {
+                "hashed_password",
+                "id",
+                "is_superuser",
+                "created_at",
+                "secret_word",
+                "updated_at",
+                "last_password_change",
+            }
+
             filtered_data = {
                 k: v for k, v in update_data.items() if k not in restricted_fields
             }

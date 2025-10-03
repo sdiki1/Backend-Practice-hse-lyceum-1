@@ -1,8 +1,6 @@
 # type: ignore
-from fastapi import APIRouter, Depends, HTTPException, Response, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
-from backend.db.dependencies import get_db_session
 from backend.db.models.users import (
     User,
     UserManager,
@@ -17,7 +15,7 @@ from backend.schemas.auth import (
     UserCreate,
 )
 from backend.schemas.users import UserResponse
-from backend.services.user_service import UserService
+from backend.services.user_service import UserService, get_user_service
 
 router = APIRouter()
 
@@ -29,8 +27,10 @@ router.include_router(
 
 @router.post("/login")
 async def login(
+    request: Request,
     form_data: OAuth2PasswordRequestFormWithEmail = Depends(),
     user_manager: UserManager = Depends(get_user_manager),
+    user_service: UserService = Depends(get_user_service),
 ) -> Response:
     """Login user by email and password. Return JWT access token."""
     user = await user_manager.authenticate(form_data)
@@ -42,17 +42,9 @@ async def login(
         )
 
     response = await auth_jwt.login(auth_jwt.get_strategy(), user)
-
+    await user_service.update_user_last_login(user.id, request)
     await user_manager.on_after_login(user)
     return response
-
-
-def get_user_service(
-    session: AsyncSession = Depends(get_db_session),
-    user_manager: UserManager = Depends(get_user_manager),
-) -> UserService:
-    """Dependency for UserService, return UserService instance."""
-    return UserService(session, user_manager)
 
 
 @router.post("/change-password")
@@ -62,13 +54,12 @@ async def change_password(
     user_service: UserService = Depends(get_user_service),
 ) -> dict:
     """Change password for current user."""
-    success = await user_service.change_password(
+
+    await user_service.change_password(
         user_id=user.id,
         current_password=request.current_password,
         new_password=request.new_password,
         secret_word=request.secret_word,
     )
 
-    if success:
-        return {"message": "Password updated successfully", "password_changed": True}
-    return {"message": "Sth went wrong", "password_changed": False}
+    return {"message": "Password updated successfully", "password_changed": True}

@@ -11,7 +11,7 @@ from backend.db.models.posts import Post
 
 
 class PostDAO:
-    """Class for accessing post table."""
+    """Data Access Object for User operations."""
 
     def __init__(self, session: AsyncSession = Depends(get_db_session)) -> None:
         self.session = session
